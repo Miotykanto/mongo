@@ -34,6 +34,23 @@ module.exports.Postliste = function (request, res) {
         })
 }
 
+
+//Affichage enregistrement ELEVE SELECTIONNE (GET)
+exports.GetSelected = (req, res) => {
+    SomeModel.find({_id: req.params._id})
+    .then(eleve => {
+        Prof.find()
+            .then(prof => {
+                for( let i=0; i<prof.length; i++){
+                    if(prof[i].classeOccupe.classe1==eleve[0].classe || prof[i].classeOccupe.classe2==eleve[0].classe || prof[i].classeOccupe.classe3==eleve[0].classe){
+                        eleve.push(prof[i])
+                    }
+                }
+                res.send(eleve)
+            })
+    })
+}
+
 //Insertion enregistrement PROF (POST)
 module.exports.PostProf = function (request, res) {
 
@@ -42,7 +59,9 @@ module.exports.PostProf = function (request, res) {
     var classe1 = request.body.classe1;
     var classe2 = request.body.classe2;
     var classe3 = request.body.classe3;
-    var matiere = request.body.matiere;
+    var matiere1 = request.body.matiere1;
+    var matiere2 = request.body.matiere2;
+    var matiere3 = request.body.matiere3;
 
     Prof.find()
         .then(notes => {
@@ -54,9 +73,18 @@ module.exports.PostProf = function (request, res) {
                 id = parseInt(notes[notes.length - 1].id) + 1;
             }
 
+            //Verifie si Classe3 et Classe2 sont vides
+                if(!classe3){
+                    if(!classe2){
+                        var insertion = new Prof({ _id: id, nom: nom, prenom: prenom, classeOccupe: {classe1 : classe1}, matiere: {matiere1: matiere1, matiere2: matiere2, matiere3: matiere3} });              
+                    } else {
+                        insertion = new Prof({ _id: id, nom: nom, prenom: prenom, classeOccupe: {classe1 : classe1, classe2 : classe2}, matiere: {matiere1: matiere1, matiere2: matiere2, matiere3: matiere3} });
+                    }
+                } else {
+                    insertion = new Prof({ _id: id, nom: nom, prenom: prenom, classeOccupe: {classe1 : classe1, classe2 : classe2, classe3 : classe3}, matiere: {matiere1: matiere1, matiere2: matiere2, matiere3: matiere3} });
+                }
 
-            const insertion = new Prof({ _id: id, nom: nom, prenom: prenom, classeOccupe: {classe1 : classe1, classe2 : classe2, classe3 : classe3}, matiere: matiere });
-            (!nom || !prenom || !classe1 || !matiere) ? console.log('données insuffisantes') : insertion.save()
+                (!nom || !prenom || !classe1 || !matiere1)? console.log('données insuffisantes') : insertion.save()
                 .then(() => {
                     Prof.find()
                         .then(notes => {
@@ -80,23 +108,6 @@ exports.GetProf = (req, res) => {
             });
         });
 };
-
-
-//Affichage enregistrement ELEVE SELECTIONNE (GET)
-exports.GetSelected = (req, res) => {
-    SomeModel.find({_id: req.params._id})
-    .then(eleve => {
-        Prof.find()
-            .then(prof => {
-                for( let i=0; i<prof.length; i++){
-                    if(prof[i].classeOccupe.classe1==eleve[0].classe || prof[i].classeOccupe.classe2==eleve[0].classe || prof[i].classeOccupe.classe3==eleve[0].classe){
-                        eleve.push(prof[i])
-                    }
-                }
-                res.send(eleve)
-            })
-    })
-}
 
 
 //Affichage enregistrements ELEVES (GET)
